@@ -40,7 +40,9 @@ public struct TagColorfier: ItemColorfier {
     private init<T: Website>(defaultClass: String, variantPrefix: String, numberOfVariants: Int, in context: PublishingContext<T>) {
         self.numberOfVariants = numberOfVariants
         self.variantPrefix = variantPrefix
-        self.items = Array<Tag>(context.allTags).sorted()
+        self.items = Array<Tag>(context.allTags).sorted(by: { (tag1, tag2) -> Bool in
+            tag1.string.lowercased() < tag2.string.lowercased()
+        })
         self.defaultClass = defaultClass
     }
     
@@ -50,7 +52,15 @@ public struct TagColorfier: ItemColorfier {
     
     internal static func colorfiedClass(for tag: Tag) -> String {
         if let index = shared.items.firstIndex(of: tag) {
-            return "\(shared.defaultClass) \(shared.variantPrefix)-\(index % shared.numberOfVariants)"
+            let residue = shared.items.count % shared.numberOfVariants
+            let itemPerColor = shared.items.count / shared.numberOfVariants
+            var result : Int
+            if index / (itemPerColor + 1) < residue {
+                result = index / (itemPerColor + 1)
+            } else {
+                result = (index - residue) / itemPerColor
+            }
+            return "\(shared.defaultClass) \(shared.variantPrefix)-\(result)"
         } else {
             return shared.defaultClass
         }
